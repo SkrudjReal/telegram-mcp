@@ -202,3 +202,10 @@ test_upload.txt
 test_voice.ogg
 sticker.webp
 two.png
+
+# Context / personal data
+context/
+*.jsonl
+
+# Env
+.env

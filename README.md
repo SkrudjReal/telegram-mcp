@@ -712,3 +712,50 @@ This project is licensed under the [Apache 2.0 License](LICENSE).
 ## Star History
 
 [![Star History Chart](https://api.star-history.com/svg?repos=chigwell/telegram-mcp&type=Date)](https://www.star-history.com/#chigwell/telegram-mcp&Date)
+
+---
+
+## 🔧 Extensions by @SkrudjReal
+
+This fork adds several utilities for context building, analysis and OpenClaw integration:
+
+### New files
+| File | Description |
+|---|---|
+| `watcher.py` | Userbot watcher — reads all messages, triggers AI agent via OpenClaw on keyword |
+| `parse_chat.py` | Universal chat/DM parser with pagination via `iter_all_messages` |
+| `context_builder.py` | Builds stats + keyword context from `messages.jsonl` |
+| `context_builder_llm.py` | LLM-powered summaries + people profiles via OpenClaw agent |
+| `CLAUDE.md` | Detailed guide for LLMs working with this tool (errors, patterns, best practices) |
+| `CRIMINAL_ANALYSIS.md` | Criminal analysis instruction (categories, format, output) |
+
+### Setup
+```bash
+cp .env.example .env
+# fill in API_ID, API_HASH, SESSION_NAME, OWNER_ID
+pip install -r requirements.txt
+python3 session_string_generator.py  # authorize session
+```
+
+### Watcher as systemd service
+```bash
+sudo cp tg-watcher.service /etc/systemd/system/
+sudo systemctl enable --now tg-watcher
+```
+
+### Context files structure
+```
+context/
+├── messages.jsonl          # live log from watcher
+├── raw_{chat_id}.jsonl     # parsed chat history
+├── chats/{id}.md           # chat summaries
+├── people/{id}.md          # person profiles
+└── summary.md              # index
+```
+
+### Known gotchas
+See `CLAUDE.md` for full list. TL;DR:
+- Use `\n` not `<br>` in Telegram HTML
+- `list_messages` is limited to 100 and returns 0 in DMs — use `iter_all_messages`
+- Semaphore required for parallel `openclaw agent` calls
+- Cache `client.get_me()` at startup, don't call it per-message

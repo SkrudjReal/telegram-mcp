@@ -1,0 +1,15 @@
+[Unit]
+Description=Telegram Watcher — OpenClaw trigger
+After=network.target
+
+[Service]
+Type=simple
+User=YOUR_USER
+WorkingDirectory=/path/to/telegram-mcp
+ExecStart=/usr/local/bin/python3 /path/to/telegram-mcp/watcher.py
+Restart=always
+RestartSec=5
+Environment=PATH=/usr/local/bin:/usr/bin:/bin
+
+[Install]
+WantedBy=multi-user.target

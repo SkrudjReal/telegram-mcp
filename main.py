@@ -3261,6 +3261,93 @@ async def search_messages(chat_id: Union[int, str], query: str, limit: int = 20)
 
 @mcp.tool(
     annotations=ToolAnnotations(
+        title="Iterate All Messages in Chat",
+        openWorldHint=True,
+        readOnlyHint=True,
+    )
+)
+async def iter_all_messages(
+    chat_id: Union[int, str],
+    limit: int = 500,
+    offset_id: int = 0,
+) -> str:
+    """
+    Iterate all messages in a chat using Telethon's iter_messages.
+    Works for private chats, groups, and channels.
+    Args:
+        chat_id: The ID or username of the chat.
+        limit: Maximum number of messages to retrieve (default 500).
+        offset_id: Start from this message ID (for pagination, use lowest ID from previous call).
+    """
+    try:
+        entity = await resolve_entity(chat_id)
+        lines = []
+        count = 0
+        kwargs = {"limit": limit}
+        if offset_id:
+            kwargs["offset_id"] = offset_id
+        async for msg in client.iter_messages(entity, **kwargs):
+            sender_name = get_sender_name(msg)
+            reply_info = ""
+            if msg.reply_to and getattr(msg.reply_to, "reply_to_msg_id", None):
+                reply_info = f" | reply to {msg.reply_to.reply_to_msg_id}"
+            text = msg.message or "[Media/No text]"
+            lines.append(
+                f"ID: {msg.id} | {sender_name} | Date: {msg.date}{reply_info} | Message: {text}"
+            )
+            count += 1
+        lines.append(f"\nTotal: {count} messages")
+        return "\n".join(lines)
+    except Exception as e:
+        return log_and_format_error(
+            "iter_all_messages", e, chat_id=chat_id, limit=limit
+        )
+
+
+@mcp.tool(
+    annotations=ToolAnnotations(
+        title="Iterate Messages by User",
+        openWorldHint=True,
+        readOnlyHint=True,
+    )
+)
+async def iter_messages_by_user(
+    chat_id: Union[int, str],
+    from_user: Union[int, str],
+    limit: int = 100,
+) -> str:
+    """
+    Iterate messages in a chat filtered by a specific user (from_user).
+    Uses Telethon's iter_messages with from_user parameter.
+    Args:
+        chat_id: The ID or username of the chat.
+        from_user: User ID or username to filter messages by.
+        limit: Maximum number of messages to retrieve (default 100).
+    """
+    try:
+        entity = await resolve_entity(chat_id)
+        lines = []
+        count = 0
+        async for msg in client.iter_messages(entity, limit=limit, from_user=from_user):
+            sender_name = get_sender_name(msg)
+            reply_info = ""
+            if msg.reply_to and msg.reply_to.reply_to_msg_id:
+                reply_info = f" | reply to {msg.reply_to.reply_to_msg_id}"
+            text = msg.message or "[Media/No text]"
+            lines.append(
+                f"ID: {msg.id} | {sender_name} | Date: {msg.date}{reply_info} | Message: {text}"
+            )
+            count += 1
+        lines.append(f"\nTotal: {count} messages from user {from_user}")
+        return "\n".join(lines)
+    except Exception as e:
+        return log_and_format_error(
+            "iter_messages_by_user", e, chat_id=chat_id, from_user=from_user, limit=limit
+        )
+
+
+@mcp.tool(
+    annotations=ToolAnnotations(
         title="Search Global Messages",
         openWorldHint=True,
         readOnlyHint=True,
